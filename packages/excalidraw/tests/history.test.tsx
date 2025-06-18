@@ -1070,7 +1070,7 @@ describe("history", () => {
       // leave editor
       Keyboard.keyPress(KEYS.ESCAPE);
 
-      expect(API.getUndoStack().length).toBe(6);
+      expect(API.getUndoStack().length).toBe(5);
       expect(API.getRedoStack().length).toBe(0);
       expect(assertSelectedElements(h.elements[0]));
       expect(h.state.selectedLinearElement?.isEditing ?? false).toBe(false);
@@ -1087,7 +1087,7 @@ describe("history", () => {
       ]);
 
       Keyboard.undo();
-      expect(API.getUndoStack().length).toBe(5);
+      expect(API.getUndoStack().length).toBe(4);
       expect(API.getRedoStack().length).toBe(1);
       expect(assertSelectedElements(h.elements[0]));
       expect(h.state.selectedLinearElement?.isEditing).toBe(true);
@@ -1107,11 +1107,11 @@ describe("history", () => {
       mouse.clickAt(0, 0);
       mouse.clickAt(10, 10);
       mouse.clickAt(20, 20);
-      expect(API.getUndoStack().length).toBe(5);
+      expect(API.getUndoStack().length).toBe(4);
       expect(API.getRedoStack().length).toBe(1);
 
       Keyboard.undo();
-      expect(API.getUndoStack().length).toBe(4);
+      expect(API.getUndoStack().length).toBe(3);
       expect(API.getRedoStack().length).toBe(2);
       expect(assertSelectedElements(h.elements[0]));
       expect(h.state.selectedLinearElement?.isEditing).toBe(true);
@@ -1128,10 +1128,10 @@ describe("history", () => {
       ]);
 
       Keyboard.undo();
-      expect(API.getUndoStack().length).toBe(3);
+      expect(API.getUndoStack().length).toBe(2);
       expect(API.getRedoStack().length).toBe(3);
       expect(assertSelectedElements(h.elements[0]));
-      expect(h.state.selectedLinearElement?.isEditing ?? false).toBe(false); // undo `open editor`
+      expect(h.state.selectedLinearElement?.isEditing).toBe(false); // undo `open editor`
       expect(h.state.selectedLinearElement?.elementId).toBe(h.elements[0].id);
       expect(h.elements).toEqual([
         expect.objectContaining({
@@ -1144,29 +1144,29 @@ describe("history", () => {
         }),
       ]);
 
-      Keyboard.undo();
-      expect(API.getUndoStack().length).toBe(2);
-      expect(API.getRedoStack().length).toBe(4);
-      expect(assertSelectedElements(h.elements[0]));
-      expect(h.state.selectedLinearElement?.isEditing ?? false).toBe(false);
-      expect(h.state.selectedLinearElement).toBeNull(); // undo `actionFinalize`
-      expect(h.elements).toEqual([
-        expect.objectContaining({
-          isDeleted: false,
-          points: [
-            [0, 0],
-            [10, 10],
-            [20, 0],
-          ],
-        }),
-      ]);
+      // Keyboard.undo();
+      // expect(API.getUndoStack().length).toBe(2);
+      // expect(API.getRedoStack().length).toBe(4);
+      // expect(assertSelectedElements(h.elements[0]));
+      // expect(h.state.selectedLinearElement?.isEditing).toBe(false);
+      // expect(h.state.selectedLinearElement).toBeNull(); // undo `actionFinalize`
+      // expect(h.elements).toEqual([
+      //   expect.objectContaining({
+      //     isDeleted: false,
+      //     points: [
+      //       [0, 0],
+      //       [10, 10],
+      //       [20, 0],
+      //     ],
+      //   }),
+      // ]);
 
       Keyboard.undo();
       expect(API.getUndoStack().length).toBe(1);
-      expect(API.getRedoStack().length).toBe(5);
+      expect(API.getRedoStack().length).toBe(4);
       expect(assertSelectedElements(h.elements[0]));
-      expect(h.state.selectedLinearElement?.isEditing ?? false).toBe(false);
-      expect(h.state.selectedLinearElement).toBeNull();
+      expect(h.state.selectedLinearElement?.isEditing).toBe(false);
+      expect(h.state.selectedLinearElement?.elementId).toBe(h.elements[0].id);
       expect(h.elements).toEqual([
         expect.objectContaining({
           isDeleted: false,
@@ -1179,9 +1179,8 @@ describe("history", () => {
 
       Keyboard.undo();
       expect(API.getUndoStack().length).toBe(0);
-      expect(API.getRedoStack().length).toBe(6);
+      expect(API.getRedoStack().length).toBe(5);
       expect(API.getSelectedElements().length).toBe(0);
-      expect(h.state.selectedLinearElement?.isEditing ?? false).toBe(false);
       expect(h.state.selectedLinearElement).toBeNull();
       expect(h.elements).toEqual([
         expect.objectContaining({
@@ -1195,10 +1194,10 @@ describe("history", () => {
 
       Keyboard.redo();
       expect(API.getUndoStack().length).toBe(1);
-      expect(API.getRedoStack().length).toBe(5);
+      expect(API.getRedoStack().length).toBe(4);
       expect(assertSelectedElements(h.elements[0]));
-      expect(h.state.selectedLinearElement?.isEditing ?? false).toBe(false);
-      expect(h.state.selectedLinearElement).toBeNull();
+      expect(h.state.selectedLinearElement?.isEditing).toBe(false);
+      expect(h.state.selectedLinearElement?.elementId).toBe(h.elements[0].id);
       expect(h.elements).toEqual([
         expect.objectContaining({
           isDeleted: false,
@@ -1208,26 +1207,26 @@ describe("history", () => {
           ],
         }),
       ]);
+
+      // Keyboard.redo();
+      // expect(API.getUndoStack().length).toBe(2);
+      // expect(API.getRedoStack().length).toBe(3);
+      // expect(assertSelectedElements(h.elements[0]));
+      // expect(h.state.selectedLinearElement?.isEditing).toBe(false);
+      // expect(h.state.selectedLinearElement).toBeNull(); // undo `actionFinalize`
+      // expect(h.elements).toEqual([
+      //   expect.objectContaining({
+      //     isDeleted: false,
+      //     points: [
+      //       [0, 0],
+      //       [10, 10],
+      //       [20, 0],
+      //     ],
+      //   }),
+      // ]);
 
       Keyboard.redo();
       expect(API.getUndoStack().length).toBe(2);
-      expect(API.getRedoStack().length).toBe(4);
-      expect(assertSelectedElements(h.elements[0]));
-      expect(h.state.selectedLinearElement?.isEditing ?? false).toBe(false);
-      expect(h.state.selectedLinearElement).toBeNull(); // undo `actionFinalize`
-      expect(h.elements).toEqual([
-        expect.objectContaining({
-          isDeleted: false,
-          points: [
-            [0, 0],
-            [10, 10],
-            [20, 0],
-          ],
-        }),
-      ]);
-
-      Keyboard.redo();
-      expect(API.getUndoStack().length).toBe(3);
       expect(API.getRedoStack().length).toBe(3);
       expect(assertSelectedElements(h.elements[0]));
       expect(h.state.selectedLinearElement?.isEditing ?? false).toBe(false); // undo `open editor`
@@ -1244,7 +1243,7 @@ describe("history", () => {
       ]);
 
       Keyboard.redo();
-      expect(API.getUndoStack().length).toBe(4);
+      expect(API.getUndoStack().length).toBe(3);
       expect(API.getRedoStack().length).toBe(2);
       expect(assertSelectedElements(h.elements[0]));
       expect(h.state.selectedLinearElement?.isEditing).toBe(true);
@@ -1261,7 +1260,7 @@ describe("history", () => {
       ]);
 
       Keyboard.redo();
-      expect(API.getUndoStack().length).toBe(5);
+      expect(API.getUndoStack().length).toBe(4);
       expect(API.getRedoStack().length).toBe(1);
       expect(assertSelectedElements(h.elements[0]));
       expect(h.state.selectedLinearElement?.isEditing).toBe(true);
@@ -1278,7 +1277,7 @@ describe("history", () => {
       ]);
 
       Keyboard.redo();
-      expect(API.getUndoStack().length).toBe(6);
+      expect(API.getUndoStack().length).toBe(5);
       expect(API.getRedoStack().length).toBe(0);
       expect(assertSelectedElements(h.elements[0]));
       expect(h.state.selectedLinearElement?.isEditing ?? false).toBe(false);
@@ -1638,13 +1637,13 @@ describe("history", () => {
         expect(API.getUndoStack().length).toBe(5);
         expect(arrow.startBinding).toEqual({
           elementId: rect1.id,
-          focus: expect.toBeNonNaNNumber(),
-          gap: expect.toBeNonNaNNumber(),
+          fixedPoint: expect.arrayContaining([1, 0.5001]),
+          mode: "orbit",
         });
         expect(arrow.endBinding).toEqual({
           elementId: rect2.id,
-          focus: expect.toBeNonNaNNumber(),
-          gap: expect.toBeNonNaNNumber(),
+          fixedPoint: expect.arrayContaining([0, 0.5001]),
+          mode: "orbit",
         });
         expect(rect1.boundElements).toStrictEqual([
           { id: text.id, type: "text" },
@@ -1661,13 +1660,13 @@ describe("history", () => {
         expect(API.getRedoStack().length).toBe(1);
         expect(arrow.startBinding).toEqual({
           elementId: rect1.id,
-          focus: expect.toBeNonNaNNumber(),
-          gap: expect.toBeNonNaNNumber(),
+          fixedPoint: expect.arrayContaining([1, 0.5001]),
+          mode: "orbit",
         });
         expect(arrow.endBinding).toEqual({
           elementId: rect2.id,
-          focus: expect.toBeNonNaNNumber(),
-          gap: expect.toBeNonNaNNumber(),
+          fixedPoint: expect.arrayContaining([0, 0.5001]),
+          mode: "orbit",
         });
         expect(h.elements).toEqual([
           expect.objectContaining({
@@ -1684,13 +1683,13 @@ describe("history", () => {
         expect(API.getRedoStack().length).toBe(0);
         expect(arrow.startBinding).toEqual({
           elementId: rect1.id,
-          focus: expect.toBeNonNaNNumber(),
-          gap: expect.toBeNonNaNNumber(),
+          fixedPoint: expect.arrayContaining([1, 0.5001]),
+          mode: "orbit",
         });
         expect(arrow.endBinding).toEqual({
           elementId: rect2.id,
-          focus: expect.toBeNonNaNNumber(),
-          gap: expect.toBeNonNaNNumber(),
+          fixedPoint: expect.arrayContaining([0, 0.5001]),
+          mode: "orbit",
         });
         expect(h.elements).toEqual([
           expect.objectContaining({
@@ -1715,13 +1714,13 @@ describe("history", () => {
         expect(API.getRedoStack().length).toBe(0);
         expect(arrow.startBinding).toEqual({
           elementId: rect1.id,
-          focus: expect.toBeNonNaNNumber(),
-          gap: expect.toBeNonNaNNumber(),
+          fixedPoint: expect.arrayContaining([1, 0.5001]),
+          mode: "orbit",
         });
         expect(arrow.endBinding).toEqual({
           elementId: rect2.id,
-          focus: expect.toBeNonNaNNumber(),
-          gap: expect.toBeNonNaNNumber(),
+          fixedPoint: expect.arrayContaining([0, 0.5001]),
+          mode: "orbit",
         });
         expect(h.elements).toEqual([
           expect.objectContaining({
@@ -1738,13 +1737,13 @@ describe("history", () => {
         expect(API.getRedoStack().length).toBe(1);
         expect(arrow.startBinding).toEqual({
           elementId: rect1.id,
-          focus: expect.toBeNonNaNNumber(),
-          gap: expect.toBeNonNaNNumber(),
+          fixedPoint: expect.arrayContaining([1, 0.5001]),
+          mode: "orbit",
         });
         expect(arrow.endBinding).toEqual({
           elementId: rect2.id,
-          focus: expect.toBeNonNaNNumber(),
-          gap: expect.toBeNonNaNNumber(),
+          fixedPoint: expect.arrayContaining([0, 0.5001]),
+          mode: "orbit",
         });
         expect(h.elements).toEqual([
           expect.objectContaining({
@@ -1793,13 +1792,19 @@ describe("history", () => {
               id: arrow.id,
               startBinding: expect.objectContaining({
                 elementId: rect1.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               endBinding: expect.objectContaining({
                 elementId: rect2.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               isDeleted: true,
             }),
@@ -1838,13 +1843,19 @@ describe("history", () => {
               id: arrow.id,
               startBinding: expect.objectContaining({
                 elementId: rect1.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               endBinding: expect.objectContaining({
                 elementId: rect2.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               isDeleted: false,
             }),
@@ -1882,8 +1893,11 @@ describe("history", () => {
               startBinding: null,
               endBinding: expect.objectContaining({
                 elementId: rect2.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               isDeleted: false,
             }),
@@ -1917,13 +1931,19 @@ describe("history", () => {
               id: arrow.id,
               startBinding: expect.objectContaining({
                 elementId: rect1.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               endBinding: expect.objectContaining({
                 elementId: rect2.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               isDeleted: false,
             }),
@@ -1990,13 +2010,19 @@ describe("history", () => {
               id: arrow.id,
               startBinding: expect.objectContaining({
                 elementId: rect1.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               endBinding: expect.objectContaining({
                 elementId: rect2.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               isDeleted: false,
             }),
@@ -2347,15 +2373,13 @@ describe("history", () => {
             ],
             startBinding: {
               elementId: "KPrBI4g_v9qUB1XxYLgSz",
-              focus: -0.001587301587301948,
-              gap: 5,
               fixedPoint: [1.0318471337579618, 0.49920634920634904],
+              mode: "orbit",
             } as FixedPointBinding,
             endBinding: {
               elementId: "u2JGnnmoJ0VATV4vCNJE5",
-              focus: -0.0016129032258049847,
-              gap: 3.537079145500037,
               fixedPoint: [0.4991935483870975, -0.03875193720914723],
+              mode: "orbit",
             } as FixedPointBinding,
           },
         ],
@@ -2470,10 +2494,9 @@ describe("history", () => {
         captureUpdate: CaptureUpdateAction.NEVER,
       });
 
-      Keyboard.undo(); // undo `actionFinalize`
       Keyboard.undo();
       expect(API.getUndoStack().length).toBe(1);
-      expect(API.getRedoStack().length).toBe(2);
+      expect(API.getRedoStack().length).toBe(1);
       expect(h.elements).toEqual([
         expect.objectContaining({
           points: [
@@ -2487,7 +2510,7 @@ describe("history", () => {
 
       Keyboard.undo();
       expect(API.getUndoStack().length).toBe(0);
-      expect(API.getRedoStack().length).toBe(3);
+      expect(API.getRedoStack().length).toBe(2);
       expect(h.elements).toEqual([
         expect.objectContaining({
           isDeleted: true,
@@ -2500,7 +2523,7 @@ describe("history", () => {
 
       Keyboard.redo();
       expect(API.getUndoStack().length).toBe(1);
-      expect(API.getRedoStack().length).toBe(2);
+      expect(API.getRedoStack().length).toBe(1);
       expect(h.elements).toEqual([
         expect.objectContaining({
           isDeleted: false,
@@ -2513,21 +2536,6 @@ describe("history", () => {
 
       Keyboard.redo();
       expect(API.getUndoStack().length).toBe(2);
-      expect(API.getRedoStack().length).toBe(1);
-      expect(h.elements).toEqual([
-        expect.objectContaining({
-          points: [
-            [0, 0],
-            [5, 5],
-            [10, 10],
-            [15, 15],
-            [20, 20],
-          ],
-        }),
-      ]);
-
-      Keyboard.redo(); // redo `actionFinalize`
-      expect(API.getUndoStack().length).toBe(3);
       expect(API.getRedoStack().length).toBe(0);
       expect(h.elements).toEqual([
         expect.objectContaining({
@@ -3027,7 +3035,7 @@ describe("history", () => {
       // leave editor
       Keyboard.keyPress(KEYS.ESCAPE);
 
-      expect(API.getUndoStack().length).toBe(4);
+      expect(API.getUndoStack().length).toBe(3);
       expect(API.getRedoStack().length).toBe(0);
       expect(h.state.selectedLinearElement).not.toBeNull();
       expect(h.state.selectedLinearElement?.isEditing).toBe(false);
@@ -3044,11 +3052,11 @@ describe("history", () => {
 
       Keyboard.undo();
       expect(API.getUndoStack().length).toBe(0);
-      expect(API.getRedoStack().length).toBe(4);
+      expect(API.getRedoStack().length).toBe(3);
       expect(h.state.selectedLinearElement).toBeNull();
 
       Keyboard.redo();
-      expect(API.getUndoStack().length).toBe(4);
+      expect(API.getUndoStack().length).toBe(3);
       expect(API.getRedoStack().length).toBe(0);
       expect(h.state.selectedLinearElement).toBeNull();
       expect(h.state.selectedLinearElement?.isEditing ?? false).toBe(false);
@@ -4573,13 +4581,19 @@ describe("history", () => {
               id: arrowId,
               startBinding: expect.objectContaining({
                 elementId: rect1.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               endBinding: expect.objectContaining({
                 elementId: rect2.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
             }),
           ]),
@@ -4707,13 +4721,19 @@ describe("history", () => {
               id: arrowId,
               startBinding: expect.objectContaining({
                 elementId: rect1.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               endBinding: expect.objectContaining({
                 elementId: rect2.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
             }),
           ]),
@@ -4751,9 +4771,8 @@ describe("history", () => {
             newElementWith(h.elements[2] as ExcalidrawElbowArrowElement, {
               endBinding: {
                 elementId: remoteContainer.id,
-                gap: 1,
-                focus: 0,
                 fixedPoint: [0.5, 1],
+                mode: "orbit",
               },
             }),
             remoteContainer,
@@ -4840,15 +4859,13 @@ describe("history", () => {
           type: "arrow",
           startBinding: {
             elementId: rect1.id,
-            gap: 1,
-            focus: 0,
             fixedPoint: [1, 0.5],
+            mode: "orbit",
           },
           endBinding: {
             elementId: rect2.id,
-            gap: 1,
-            focus: 0,
             fixedPoint: [0.5, 1],
+            mode: "orbit",
           },
         });
 
@@ -4902,8 +4919,7 @@ describe("history", () => {
                     expect.toBeNonNaNNumber(),
                     expect.toBeNonNaNNumber(),
                   ],
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  mode: "orbit",
                 }),
                 endBinding: expect.objectContaining({
                   // now we are back in the previous state!
@@ -4912,8 +4928,7 @@ describe("history", () => {
                     expect.toBeNonNaNNumber(),
                     expect.toBeNonNaNNumber(),
                   ],
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  mode: "orbit",
                 }),
               }),
               expect.objectContaining({
@@ -4949,15 +4964,13 @@ describe("history", () => {
             newElementWith(h.elements[0] as ExcalidrawElbowArrowElement, {
               startBinding: {
                 elementId: rect1.id,
-                gap: 1,
-                focus: 0,
                 fixedPoint: [0.5, 1],
+                mode: "orbit",
               },
               endBinding: {
                 elementId: rect2.id,
-                gap: 1,
-                focus: 0,
                 fixedPoint: [1, 0.5],
+                mode: "orbit",
               },
             }),
             newElementWith(rect1, {
@@ -4984,8 +4997,7 @@ describe("history", () => {
                     expect.toBeNonNaNNumber(),
                     expect.toBeNonNaNNumber(),
                   ],
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  mode: "orbit",
                 }),
                 endBinding: expect.objectContaining({
                   elementId: rect2.id,
@@ -4993,8 +5005,7 @@ describe("history", () => {
                     expect.toBeNonNaNNumber(),
                     expect.toBeNonNaNNumber(),
                   ],
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  mode: "orbit",
                 }),
                 isDeleted: true,
               }),
@@ -5024,8 +5035,7 @@ describe("history", () => {
                     expect.toBeNonNaNNumber(),
                     expect.toBeNonNaNNumber(),
                   ],
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  mode: "orbit",
                 },
                 endBinding: expect.objectContaining({
                   elementId: rect2.id,
@@ -5033,8 +5043,7 @@ describe("history", () => {
                     expect.toBeNonNaNNumber(),
                     expect.toBeNonNaNNumber(),
                   ],
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  mode: "orbit",
                 }),
                 isDeleted: false,
               }),
@@ -5077,13 +5086,11 @@ describe("history", () => {
               id: arrowId,
               startBinding: expect.objectContaining({
                 elementId: rect1.id,
-                focus: 0,
-                gap: 1,
+                fixedPoint: expect.arrayContaining([1, 0.5001]),
               }),
               endBinding: expect.objectContaining({
                 elementId: rect2.id,
-                focus: -0,
-                gap: 1,
+                fixedPoint: expect.arrayContaining([0, 0.5001]),
               }),
               isDeleted: true,
             }),
@@ -5125,13 +5132,19 @@ describe("history", () => {
               id: arrowId,
               startBinding: expect.objectContaining({
                 elementId: rect1.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               endBinding: expect.objectContaining({
                 elementId: rect2.id,
-                focus: expect.toBeNonNaNNumber(),
-                gap: expect.toBeNonNaNNumber(),
+                fixedPoint: expect.arrayContaining([
+                  expect.toBeNonNaNNumber(),
+                  expect.toBeNonNaNNumber(),
+                ]),
+                mode: "orbit",
               }),
               isDeleted: false,
             }),
