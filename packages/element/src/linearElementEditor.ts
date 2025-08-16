@@ -465,7 +465,6 @@ export class LinearElementEditor {
               ? "start"
               : "end",
             app.scene,
-            app.state.zoom,
           );
         }
       }
@@ -2001,7 +2000,6 @@ const pointDraggingUpdates = (
           newGlobalPointPosition,
           elements,
           elementsMap,
-          app.state.zoom,
         );
         const otherGlobalPoint =
           LinearElementEditor.getPointAtIndexGlobalCoordinates(
@@ -2011,12 +2009,7 @@ const pointDraggingUpdates = (
           );
         const otherPointInsideElement =
           !!hoveredElement &&
-          !!bindingBorderTest(
-            hoveredElement,
-            otherGlobalPoint,
-            elementsMap,
-            app.state.zoom,
-          );
+          !!bindingBorderTest(hoveredElement, otherGlobalPoint, elementsMap);
 
         if (
           isBindingEnabled(app.state) &&

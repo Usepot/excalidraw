@@ -4557,15 +4557,29 @@ describe("history", () => {
 
         // create start binding
         mouse.downAt(0, 0);
-        mouse.moveTo(0, 1);
-        mouse.moveTo(0, 0);
+        mouse.moveTo(0, 10);
+        mouse.moveTo(0, 10);
         mouse.up();
 
         // create end binding
         mouse.downAt(100, 0);
-        mouse.moveTo(100, 1);
-        mouse.moveTo(100, 0);
+        mouse.moveTo(100, 10);
+        mouse.moveTo(100, 10);
         mouse.up();
+
+        expect(
+          (h.elements[2] as ExcalidrawElbowArrowElement).startBinding
+            ?.fixedPoint,
+        ).not.toEqual([1, 0.5001]);
+        expect(
+          (h.elements[2] as ExcalidrawElbowArrowElement).startBinding?.mode,
+        ).toBe("orbit");
+        expect(
+          (h.elements[2] as ExcalidrawElbowArrowElement).endBinding,
+        ).not.toEqual([1, 0.5001]);
+        expect(
+          (h.elements[2] as ExcalidrawElbowArrowElement).endBinding?.mode,
+        ).toBe("orbit");
 
         expect(h.elements).toEqual(
           expect.arrayContaining([
@@ -4606,12 +4620,16 @@ describe("history", () => {
         expect(h.elements).toEqual([
           expect.objectContaining({
             id: rect1.id,
-            boundElements: [],
+            boundElements: [{ id: arrowId, type: "arrow" }],
           }),
           expect.objectContaining({ id: rect2.id, boundElements: [] }),
           expect.objectContaining({
             id: arrowId,
-            startBinding: null,
+            startBinding: expect.objectContaining({
+              elementId: rect1.id,
+              fixedPoint: [1, 0.5001],
+              mode: "inside",
+            }),
             endBinding: null,
           }),
         ]);
@@ -4656,13 +4674,13 @@ describe("history", () => {
                 id: arrowId,
                 startBinding: expect.objectContaining({
                   elementId: rect1.id,
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  fixedPoint: [1, 0.6],
+                  mode: "orbit",
                 }),
                 endBinding: expect.objectContaining({
                   elementId: rect2.id,
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  fixedPoint: [0, 0.6],
+                  mode: "orbit",
                 }),
               }),
             ]),
@@ -4675,12 +4693,21 @@ describe("history", () => {
           expect(h.elements).toEqual([
             expect.objectContaining({
               id: rect1.id,
-              boundElements: [],
+              boundElements: [
+                expect.objectContaining({
+                  id: arrowId,
+                  type: "arrow",
+                }),
+              ],
             }),
             expect.objectContaining({ id: rect2.id, boundElements: [] }),
             expect.objectContaining({
               id: arrowId,
-              startBinding: null,
+              startBinding: expect.objectContaining({
+                elementId: rect1.id,
+                fixedPoint: [1, 0.5001],
+                mode: "inside",
+              }),
               endBinding: null,
             }),
           ]);
@@ -4699,13 +4726,13 @@ describe("history", () => {
 
         // create start binding
         mouse.downAt(0, 0);
-        mouse.moveTo(0, 1);
-        mouse.upAt(0, 0);
+        mouse.moveTo(0, 10);
+        mouse.upAt(0, 10);
 
         // create end binding
         mouse.downAt(100, 0);
-        mouse.moveTo(100, 1);
-        mouse.upAt(100, 0);
+        mouse.moveTo(100, 10);
+        mouse.upAt(100, 10);
 
         expect(h.elements).toEqual(
           expect.arrayContaining([
@@ -4746,12 +4773,21 @@ describe("history", () => {
         expect(h.elements).toEqual([
           expect.objectContaining({
             id: rect1.id,
-            boundElements: [],
+            boundElements: [
+              expect.objectContaining({
+                id: arrowId,
+                type: "arrow",
+              }),
+            ],
           }),
           expect.objectContaining({ id: rect2.id, boundElements: [] }),
           expect.objectContaining({
             id: arrowId,
-            startBinding: null,
+            startBinding: expect.objectContaining({
+              elementId: rect1.id,
+              fixedPoint: [1, 0.5001],
+              mode: "inside",
+            }),
             endBinding: null,
           }),
         ]);
@@ -4799,14 +4835,14 @@ describe("history", () => {
                 id: arrowId,
                 startBinding: expect.objectContaining({
                   elementId: rect1.id,
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  fixedPoint: [1, 0.6],
+                  mode: "orbit",
                 }),
                 // rebound with previous rectangle
                 endBinding: expect.objectContaining({
                   elementId: rect2.id,
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  fixedPoint: [0, 0.6],
+                  mode: "orbit",
                 }),
               }),
               expect.objectContaining({
@@ -4824,7 +4860,12 @@ describe("history", () => {
             expect.arrayContaining([
               expect.objectContaining({
                 id: rect1.id,
-                boundElements: [],
+                boundElements: [
+                  expect.objectContaining({
+                    id: arrowId,
+                    type: "arrow",
+                  }),
+                ],
               }),
               expect.objectContaining({
                 id: rect2.id,
@@ -4832,16 +4873,16 @@ describe("history", () => {
               }),
               expect.objectContaining({
                 id: arrowId,
-                startBinding: null,
+                startBinding: expect.objectContaining({
+                  elementId: rect1.id,
+                  fixedPoint: [1, 0.5001],
+                  mode: "inside",
+                }),
                 endBinding: expect.objectContaining({
                   // now we are back in the previous state!
                   elementId: remoteContainer.id,
-                  fixedPoint: [
-                    expect.toBeNonNaNNumber(),
-                    expect.toBeNonNaNNumber(),
-                  ],
-                  focus: expect.toBeNonNaNNumber(),
-                  gap: expect.toBeNonNaNNumber(),
+                  fixedPoint: [0.5, 1],
+                  mode: "orbit",
                 }),
               }),
               expect.objectContaining({

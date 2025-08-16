@@ -20,7 +20,11 @@ import type { PointerDownState } from "@excalidraw/excalidraw/types";
 
 import type { Mutable } from "@excalidraw/common/utility-types";
 
-import { getArrowLocalFixedPoints, updateBoundElements } from "./binding";
+import {
+  getArrowLocalFixedPoints,
+  unbindBindingElement,
+  updateBoundElements,
+} from "./binding";
 import {
   getElementAbsoluteCoords,
   getCommonBounds,
@@ -229,12 +233,18 @@ const rotateSingleElement = (
   if (isBindingElement(element)) {
     update = {
       ...update,
-      startBinding: null,
-      endBinding: null,
     } as ElementUpdate<ExcalidrawArrowElement>;
+
+    if (element.startBinding) {
+      unbindBindingElement(element, "start", scene);
+    }
+    if (element.endBinding) {
+      unbindBindingElement(element, "end", scene);
+    }
   }
 
   scene.mutateElement(element, update);
+
   if (boundTextElementId) {
     const textElement =
       scene.getElement<ExcalidrawTextElementWithContainer>(boundTextElementId);
@@ -399,6 +409,11 @@ const rotateMultipleElements = (
     centerAngle -= centerAngle % SHIFT_LOCKING_ANGLE;
   }
 
+  const rotatedElementsMap = new Map<
+    ExcalidrawElement["id"],
+    NonDeletedExcalidrawElement
+  >(elements.map((element) => [element.id, element]));
+
   for (const element of elements) {
     if (!isFrameLikeElement(element)) {
       const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
@@ -428,6 +443,19 @@ const rotateMultipleElements = (
       updateBoundElements(element, scene, {
         simultaneouslyUpdated: elements,
       });
+
+      if (isBindingElement(element)) {
+        if (element.startBinding) {
+          if (!rotatedElementsMap.has(element.startBinding.elementId)) {
+            unbindBindingElement(element, "start", scene);
+          }
+        }
+        if (element.endBinding) {
+          if (!rotatedElementsMap.has(element.endBinding.elementId)) {
+            unbindBindingElement(element, "end", scene);
+          }
+        }
+      }
 
       const boundText = getBoundTextElement(element, elementsMap);
       if (boundText && !isArrowElement(element)) {
@@ -845,8 +873,11 @@ export const resizeSingleElement = (
       if (latestElement.startBinding) {
         updates = {
           ...updates,
-          startBinding: null,
         } as ElementUpdate<ExcalidrawArrowElement>;
+
+        if (latestElement.startBinding) {
+          unbindBindingElement(latestElement, "start", scene);
+        }
       }
 
       if (latestElement.endBinding) {
@@ -1408,6 +1439,10 @@ export const resizeMultipleElements = (
     }
 
     const elementsToUpdate = elementsAndUpdates.map(({ element }) => element);
+    const resizedElementsMap = new Map<
+      ExcalidrawElement["id"],
+      NonDeletedExcalidrawElement
+    >(elementsAndUpdates.map(({ element }) => [element.id, element]));
 
     for (const {
       element,
@@ -1420,6 +1455,19 @@ export const resizeMultipleElements = (
       updateBoundElements(element, scene, {
         simultaneouslyUpdated: elementsToUpdate,
       });
+
+      if (isBindingElement(element)) {
+        if (element.startBinding) {
+          if (!resizedElementsMap.has(element.startBinding.elementId)) {
+            unbindBindingElement(element, "start", scene);
+          }
+        }
+        if (element.endBinding) {
+          if (!resizedElementsMap.has(element.endBinding.elementId)) {
+            unbindBindingElement(element, "end", scene);
+          }
+        }
+      }
 
       const boundTextElement = getBoundTextElement(element, elementsMap);
       if (boundTextElement && boundTextFontSize) {

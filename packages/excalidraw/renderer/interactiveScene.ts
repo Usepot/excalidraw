@@ -16,10 +16,7 @@ import {
   throttleRAF,
 } from "@excalidraw/common";
 
-import {
-  FIXED_BINDING_DISTANCE,
-  maxBindingDistanceFromOutline,
-} from "@excalidraw/element";
+import { FIXED_BINDING_DISTANCE } from "@excalidraw/element";
 import { LinearElementEditor } from "@excalidraw/element";
 import {
   getOmitSidesForDevice,
@@ -197,12 +194,7 @@ const renderBindingHighlightForBindableElement = (
   elementsMap: ElementsMap,
   zoom: InteractiveCanvasAppState["zoom"],
 ) => {
-  const padding = maxBindingDistanceFromOutline(
-    element,
-    element.width,
-    element.height,
-    zoom,
-  );
+  const padding = 5;
 
   context.fillStyle = "rgba(0,0,0,.05)";
 
@@ -251,14 +243,9 @@ const renderBindingHighlightForSuggestedPointBinding = (
   elementsMap: ElementsMap,
   zoom: InteractiveCanvasAppState["zoom"],
 ) => {
-  const [element, startOrEnd, bindableElement] = suggestedBinding;
+  const [element, startOrEnd] = suggestedBinding;
 
-  const threshold = maxBindingDistanceFromOutline(
-    bindableElement,
-    bindableElement.width,
-    bindableElement.height,
-    zoom,
-  );
+  const threshold = 0;
 
   context.strokeStyle = "rgba(0,0,0,0)";
   context.fillStyle = "rgba(0,0,0,.05)";

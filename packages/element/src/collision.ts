@@ -25,7 +25,7 @@ import type {
   Radians,
 } from "@excalidraw/math";
 
-import type { AppState, FrameNameBounds } from "@excalidraw/excalidraw/types";
+import type { FrameNameBounds } from "@excalidraw/excalidraw/types";
 
 import { isPathALoop } from "./utils";
 import {
@@ -57,8 +57,6 @@ import { getBoundTextElement } from "./textElement";
 import { LinearElementEditor } from "./linearElementEditor";
 
 import { distanceToElement } from "./distance";
-
-import { BINDING_HIGHLIGHT_THICKNESS, FIXED_BINDING_DISTANCE } from "./binding";
 
 import type {
   ElementsMap,
@@ -206,40 +204,12 @@ export const hitElementBoundText = (
   return isPointInElement(point, boundTextElement, elementsMap);
 };
 
-export const maxBindingDistanceFromOutline = (
-  element: ExcalidrawElement,
-  elementWidth: number,
-  elementHeight: number,
-  zoom?: AppState["zoom"],
-): number => {
-  const zoomValue = zoom?.value && zoom.value < 1 ? zoom.value : 1;
-
-  // Aligns diamonds with rectangles
-  const shapeRatio = element.type === "diamond" ? 1 / Math.sqrt(2) : 1;
-  const smallerDimension = shapeRatio * Math.min(elementWidth, elementHeight);
-
-  return Math.max(
-    16,
-    // bigger bindable boundary for bigger elements
-    Math.min(0.25 * smallerDimension, 32),
-    // keep in sync with the zoomed highlight
-    BINDING_HIGHLIGHT_THICKNESS / zoomValue + FIXED_BINDING_DISTANCE,
-  );
-};
-
 export const bindingBorderTest = (
   element: NonDeleted<ExcalidrawBindableElement>,
   [x, y]: Readonly<GlobalPoint>,
   elementsMap: NonDeletedSceneElementsMap,
-  zoom?: AppState["zoom"],
 ): boolean => {
   const p = pointFrom<GlobalPoint>(x, y);
-  const threshold = maxBindingDistanceFromOutline(
-    element,
-    element.width,
-    element.height,
-    zoom,
-  );
   const shouldTestInside =
     // disable fullshape snapping for frame elements so we
     // can bind to frame children
@@ -247,12 +217,7 @@ export const bindingBorderTest = (
 
   // PERF: Run a cheap test to see if the binding element
   // is even close to the element
-  const bounds = [
-    x - threshold,
-    y - threshold,
-    x + threshold,
-    y + threshold,
-  ] as Bounds;
+  const bounds = [x - 1, y - 1, x + 1, y + 1] as Bounds;
   const elementBounds = getElementBounds(element, elementsMap);
   if (!doBoundsIntersect(bounds, elementBounds)) {
     return false;
@@ -267,15 +232,14 @@ export const bindingBorderTest = (
   const distance = distanceToElement(element, elementsMap, p);
 
   return shouldTestInside
-    ? intersections.length === 0 || distance <= threshold
-    : intersections.length > 0 && distance <= threshold;
+    ? intersections.length === 0
+    : intersections.length > 0 && distance <= 1;
 };
 
 export const getHoveredElementForBinding = (
   point: Readonly<GlobalPoint>,
   elements: readonly Ordered<NonDeletedExcalidrawElement>[],
   elementsMap: NonDeletedSceneElementsMap,
-  zoom?: AppState["zoom"],
 ): NonDeleted<ExcalidrawBindableElement> | null => {
   const candidateElements: NonDeleted<ExcalidrawBindableElement>[] = [];
   // We need to to hit testing from front (end of the array) to back (beginning of the array)
@@ -291,7 +255,7 @@ export const getHoveredElementForBinding = (
 
     if (
       isBindableElement(element, false) &&
-      bindingBorderTest(element, point, elementsMap, zoom)
+      bindingBorderTest(element, point, elementsMap)
     ) {
       candidateElements.push(element);
     }
@@ -311,36 +275,6 @@ export const getHoveredElementForBinding = (
       (a, b) => b.width ** 2 + b.height ** 2 - (a.width ** 2 + a.height ** 2),
     )
     .pop() as NonDeleted<ExcalidrawBindableElement>;
-};
-
-export const getHoveredElementForBindingAndIfItsPrecise = (
-  point: GlobalPoint,
-  elements: readonly Ordered<NonDeletedExcalidrawElement>[],
-  elementsMap: NonDeletedSceneElementsMap,
-  zoom: AppState["zoom"],
-  shouldTestInside: boolean = true,
-): {
-  hovered: NonDeleted<ExcalidrawBindableElement> | null;
-  hit: boolean;
-} => {
-  const hoveredElement = getHoveredElementForBinding(
-    point,
-    elements,
-    elementsMap,
-    zoom,
-  );
-  // TODO: Optimize this to avoid recalculating the point - element distance
-  const hit =
-    !!hoveredElement &&
-    hitElementItself({
-      element: hoveredElement,
-      elementsMap,
-      point,
-      threshold: 0,
-      overrideShouldTestInside: shouldTestInside,
-    });
-
-  return { hovered: hoveredElement, hit };
 };
 
 /**
