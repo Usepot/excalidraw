@@ -49,6 +49,7 @@ import {
   getOutlineAvoidingPoint,
   isBindingEnabled,
   maybeSuggestBindingsForBindingElementAtCoords,
+  snapToCenter,
 } from "./binding";
 import {
   getElementAbsoluteCoords,
@@ -2037,7 +2038,7 @@ const pointDraggingUpdates = (
           newGlobalPointPosition = getOutlineAvoidingPoint(
             element,
             hoveredElement,
-            newGlobalPointPosition,
+            snapToCenter(hoveredElement, elementsMap, newGlobalPointPosition),
             pointIndex,
             elementsMap,
             customIntersector,
@@ -2127,7 +2128,7 @@ const pointDraggingUpdates = (
           const newGlobalPointPosition = getOutlineAvoidingPoint(
             element,
             hoveredElement,
-            focusGlobalPoint,
+            snapToCenter(hoveredElement, elementsMap, focusGlobalPoint),
             pointIndex,
             elementsMap,
           );

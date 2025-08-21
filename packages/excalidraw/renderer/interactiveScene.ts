@@ -1,3 +1,5 @@
+import rough from "roughjs/bin/rough";
+
 import {
   pointFrom,
   pointsEqual,
@@ -16,7 +18,7 @@ import {
   throttleRAF,
 } from "@excalidraw/common";
 
-import { LinearElementEditor } from "@excalidraw/element";
+import { LinearElementEditor, ShapeCache } from "@excalidraw/element";
 import {
   getOmitSidesForDevice,
   getTransformHandles,
@@ -42,6 +44,7 @@ import {
 } from "@excalidraw/element";
 
 import { getCommonBounds, getElementAbsoluteCoords } from "@excalidraw/element";
+import chroma from "chroma-js";
 
 import type {
   SuggestedBinding,
@@ -78,11 +81,8 @@ import { getClientColor, renderRemoteCursors } from "../clients";
 
 import {
   bootstrapCanvas,
-  drawHighlightForDiamondWithRotation,
-  drawHighlightForRectWithRotation,
   fillCircle,
   getNormalizedCanvasDimensions,
-  strokeEllipseWithRotation,
   strokeRectWithRotation,
 } from "./helpers";
 
@@ -190,42 +190,19 @@ const renderSingleLinearPoint = <Point extends GlobalPoint | LocalPoint>(
 const renderBindingHighlightForBindableElement = (
   context: CanvasRenderingContext2D,
   element: ExcalidrawBindableElement,
-  elementsMap: ElementsMap,
 ) => {
-  context.lineWidth = 1;
-  context.strokeStyle = element.strokeColor;
-  context.shadowColor = element.strokeColor;
-  context.shadowBlur = 10;
+  context.translate(element.x, element.y);
 
-  switch (element.type) {
-    case "rectangle":
-    case "text":
-    case "image":
-    case "iframe":
-    case "embeddable":
-    case "frame":
-    case "magicframe":
-      drawHighlightForRectWithRotation(context, element, elementsMap);
-      break;
-    case "diamond":
-      drawHighlightForDiamondWithRotation(context, element, elementsMap);
-      break;
-    case "ellipse": {
-      const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
-      const width = x2 - x1;
-      const height = y2 - y1;
+  const rc = rough.canvas(context.canvas);
+  const drawable = ShapeCache.get(element)!;
+  const originalColor = drawable.options.stroke;
+  const originalStrokeWidth = drawable.options.strokeWidth;
 
-      strokeEllipseWithRotation(
-        context,
-        width,
-        height,
-        x1 + width / 2,
-        y1 + height / 2,
-        element.angle,
-      );
-      break;
-    }
-  }
+  drawable.options.stroke = chroma(drawable.options.stroke).desaturate().hex();
+  drawable.options.strokeWidth = drawable.options.strokeWidth * 1.1;
+  rc.draw(drawable);
+  drawable.options.stroke = originalColor;
+  drawable.options.strokeWidth = originalStrokeWidth;
 };
 
 const renderBindingHighlightForSuggestedPointBinding = (

@@ -415,7 +415,9 @@ const bindingStrategyForNewSimpleArrowEndpointDragging = (
         end = {
           mode: isInsideBinding ? "inside" : "orbit",
           element: hit,
-          focusPoint: point,
+          focusPoint: isInsideBinding
+            ? point
+            : snapToCenter(hit, elementsMap, point),
         };
       } else {
         end = { mode: null };
@@ -437,7 +439,6 @@ const bindingStrategyForSimpleArrowEndpointDragging = (
   elements: readonly Ordered<NonDeletedExcalidrawElement>[],
   globalBindMode?: AppState["bindMode"],
   opts?: {
-    newArrow?: boolean;
     appState?: AppState;
   },
 ): { current: BindingStrategy; other: BindingStrategy } => {
@@ -493,12 +494,7 @@ const bindingStrategyForSimpleArrowEndpointDragging = (
       current = {
         element: hit,
         mode: "orbit",
-        focusPoint: opts?.newArrow
-          ? pointFrom<GlobalPoint>(
-              hit.x + hit.width / 2,
-              hit.y + hit.height / 2,
-            )
-          : point,
+        focusPoint: snapToCenter(hit, elementsMap, point),
       };
 
       return { current, other };
@@ -509,9 +505,7 @@ const bindingStrategyForSimpleArrowEndpointDragging = (
     current = {
       element: hit,
       mode: "orbit",
-      focusPoint: opts?.newArrow
-        ? pointFrom<GlobalPoint>(hit.x + hit.width / 2, hit.y + hit.height / 2)
-        : point,
+      focusPoint: snapToCenter(hit, elementsMap, point),
     };
   }
 
@@ -624,7 +618,7 @@ export const getBindingStrategyForDraggingBindingElementEndpoints = (
       elementsMap,
       elements,
       globalBindMode,
-      opts,
+      { appState },
     );
 
     return { start: current, end: other };
@@ -645,7 +639,7 @@ export const getBindingStrategyForDraggingBindingElementEndpoints = (
       elementsMap,
       elements,
       globalBindMode,
-      opts,
+      { appState },
     );
 
     return { start: other, end: current };

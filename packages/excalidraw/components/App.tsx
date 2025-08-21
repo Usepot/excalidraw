@@ -243,7 +243,6 @@ import {
   bindOrUnbindBindingElement,
   getBindingStrategyForDraggingBindingElementEndpoints,
   getStartGlobalEndLocalPointsForSimpleArrowBinding,
-  snapToCenter,
   mutateElement,
 } from "@excalidraw/element";
 
@@ -787,7 +786,10 @@ class App extends React.Component<AppProps, AppState> {
   //   }
 
   //   if (newState && Object.hasOwn(newState, "selectedLinearElement")) {
-  //     console.trace(!!newState.selectedLinearElement);
+  //     //console.trace(!!newState.selectedLinearElement);
+  //     if (!newState.selectedLinearElement?.selectedPointsIndices?.length) {
+  //       console.trace(newState.selectedLinearElement?.selectedPointsIndices);
+  //     }
   //   }
 
   //   super.setState(newState, callback);
@@ -862,6 +864,130 @@ class App extends React.Component<AppProps, AppState> {
           }
         }
         break;
+    }
+  }
+
+  private handleSkipBindMode() {
+    if (this.state.bindMode === "orbit") {
+      if (this.bindModeHandler) {
+        clearTimeout(this.bindModeHandler);
+        this.bindModeHandler = null;
+      }
+
+      this.setState({
+        bindMode: "orbit",
+      });
+    }
+  }
+
+  private resetDelayedBindMode() {
+    if (this.bindModeHandler) {
+      clearTimeout(this.bindModeHandler);
+      this.bindModeHandler = null;
+    }
+
+    if (this.state.bindMode !== "orbit") {
+      // We need this iteration to complete binding and change
+      // back to orbit mode after that
+      setTimeout(() =>
+        this.setState({
+          bindMode: "orbit",
+        }),
+      );
+    }
+  }
+
+  private handleDelayedBindModeChange(
+    arrow: ExcalidrawArrowElement,
+    hoveredElement: NonDeletedExcalidrawElement | null,
+  ) {
+    if (isElbowArrow(arrow)) {
+      return;
+    }
+
+    const effector = () => {
+      this.bindModeHandler = null;
+
+      invariant(
+        this.lastPointerMoveCoords,
+        "Expected lastPointerMoveCoords to be set",
+      );
+
+      if (!this.state.selectedLinearElement?.selectedPointsIndices?.length) {
+        return;
+      }
+
+      const startDragged =
+        this.state.selectedLinearElement.selectedPointsIndices.includes(0);
+      const endDragged =
+        this.state.selectedLinearElement.selectedPointsIndices.includes(
+          arrow.points.length - 1,
+        );
+      if ((!startDragged && !endDragged) || (startDragged && endDragged)) {
+        return;
+      }
+
+      const { x, y } = this.lastPointerMoveCoords;
+      const hoveredElement = getHoveredElementForBinding(
+        pointFrom<GlobalPoint>(x, y),
+        this.scene.getNonDeletedElements(),
+        this.scene.getNonDeletedElementsMap(),
+      );
+
+      if (hoveredElement) {
+        flushSync(() => {
+          invariant(
+            this.state.selectedLinearElement?.elementId === arrow.id,
+            "The selectedLinearElement is expected to not change while a bind mode timeout is ticking",
+          );
+
+          // Change the global binding mode
+          this.setState({
+            bindMode: "inside",
+            selectedLinearElement: {
+              ...this.state.selectedLinearElement,
+              pointerDownState: {
+                ...this.state.selectedLinearElement.pointerDownState,
+                arrowStartIsInside: true,
+              },
+            },
+          });
+
+          // Make the arrow endpoint "jump" to the cursor
+          const point = LinearElementEditor.createPointAt(
+            arrow,
+            this.scene.getNonDeletedElementsMap(),
+            x,
+            y,
+            isBindingEnabled(this.state) ? this.getEffectiveGridSize() : null,
+          );
+          this.scene.mutateElement(arrow, {
+            points: startDragged
+              ? [point, ...arrow.points.slice(1)]
+              : [...arrow.points.slice(0, -1), point],
+          });
+        });
+      }
+    };
+
+    if (!hoveredElement) {
+      // Clear the timeout if we're not hovering a bindable
+      if (this.bindModeHandler) {
+        clearTimeout(this.bindModeHandler);
+        this.bindModeHandler = null;
+      }
+
+      // Clear the inside binding mode too
+      if (this.state.bindMode !== "orbit") {
+        flushSync(() => {
+          this.setState({
+            bindMode: "orbit",
+          });
+        });
+      }
+    } else if (!this.bindModeHandler) {
+      // We are hovering a bindable element
+      this.bindModeHandler = setTimeout(effector, BIND_MODE_TIMEOUT);
     }
   }
 
@@ -4430,16 +4556,8 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       // Handle Alt key for bind mode
-      if (event.key === KEYS.ALT && this.state.bindMode === "orbit") {
-        // Cancel any pending bind mode timer
-        if (this.bindModeHandler) {
-          clearTimeout(this.bindModeHandler);
-          this.bindModeHandler = null;
-        }
-        // Immediately switch to skip bind mode
-        this.setState({
-          bindMode: "skip",
-        });
+      if (event.key === KEYS.ALT) {
+        this.handleSkipBindMode();
       }
 
       if (this.actionManager.handleKeyDown(event)) {
@@ -4451,10 +4569,7 @@ class App extends React.Component<AppProps, AppState> {
       }
 
       if (event[KEYS.CTRL_OR_CMD] && this.state.isBindingEnabled) {
-        if (this.bindModeHandler) {
-          clearTimeout(this.bindModeHandler);
-          this.bindModeHandler = null;
-        }
+        this.resetDelayedBindMode();
         this.setState({ isBindingEnabled: false });
       }
 
@@ -4767,15 +4882,15 @@ class App extends React.Component<AppProps, AppState> {
           this.scene.getNonDeletedElementsMap(),
         );
 
-        if (hoveredElement && !this.bindModeHandler) {
-          this.bindModeHandler = setTimeout(() => {
-            if (hoveredElement) {
-              this.setState({
-                bindMode: "inside",
-              });
-            }
-            this.bindModeHandler = null;
-          }, BIND_MODE_TIMEOUT);
+        if (this.state.selectedLinearElement) {
+          const element = LinearElementEditor.getElement(
+            this.state.selectedLinearElement.elementId,
+            this.scene.getNonDeletedElementsMap(),
+          );
+
+          if (isBindingElement(element)) {
+            this.handleDelayedBindModeChange(element, hoveredElement);
+          }
         }
       }
     }
@@ -5916,6 +6031,12 @@ class App extends React.Component<AppProps, AppState> {
   ) => {
     this.savePointer(event.clientX, event.clientY, this.state.cursorButton);
     this.lastPointerMoveEvent = event.nativeEvent;
+    const scenePointer = viewportCoordsToSceneCoords(event, this.state);
+    const { x: scenePointerX, y: scenePointerY } = scenePointer;
+    this.lastPointerMoveCoords = {
+      x: scenePointerX,
+      y: scenePointerY,
+    };
 
     if (gesture.pointers.has(event.pointerId)) {
       gesture.pointers.set(event.pointerId, {
@@ -6003,13 +6124,6 @@ class App extends React.Component<AppProps, AppState> {
         setCursorForShape(this.interactiveCanvas, this.state);
       }
     }
-
-    const scenePointer = viewportCoordsToSceneCoords(event, this.state);
-    const { x: scenePointerX, y: scenePointerY } = scenePointer;
-    this.lastPointerMoveCoords = {
-      x: scenePointerX,
-      y: scenePointerY,
-    };
 
     if (
       !this.state.newElement &&
@@ -6202,54 +6316,7 @@ class App extends React.Component<AppProps, AppState> {
             elementsMap,
           );
 
-          // Timed bind mode handler for arrow elements
-          if (this.state.bindMode === "orbit") {
-            if (this.bindModeHandler && !hoveredElement) {
-              clearTimeout(this.bindModeHandler);
-              this.bindModeHandler = null;
-            } else if (!this.bindModeHandler && hoveredElement) {
-              this.bindModeHandler = setTimeout(() => {
-                if (hoveredElement) {
-                  flushSync(() => {
-                    this.setState({
-                      bindMode: "inside",
-                      selectedLinearElement: this.state.selectedLinearElement
-                        ? {
-                            ...this.state.selectedLinearElement,
-                            pointerDownState: {
-                              ...this.state.selectedLinearElement
-                                .pointerDownState,
-                              arrowStartIsInside: true,
-                            },
-                          }
-                        : null,
-                    });
-                  });
-                  this.scene.mutateElement(multiElement, {
-                    points: [
-                      ...multiElement.points.slice(0, -1),
-                      pointFrom<LocalPoint>(
-                        this.lastPointerMoveCoords!.x - multiElement.x,
-                        this.lastPointerMoveCoords!.y - multiElement.y,
-                      ),
-                    ],
-                  });
-                }
-
-                this.bindModeHandler = null;
-              }, BIND_MODE_TIMEOUT);
-            }
-          } else if (!hoveredElement) {
-            if (this.bindModeHandler) {
-              clearTimeout(this.bindModeHandler);
-              this.bindModeHandler = null;
-            }
-            flushSync(() => {
-              this.setState({
-                bindMode: "orbit",
-              });
-            });
-          }
+          this.handleDelayedBindModeChange(multiElement, hoveredElement);
 
           const point = pointFrom<LocalPoint>(
             scenePointerX - rx,
@@ -6659,6 +6726,13 @@ class App extends React.Component<AppProps, AppState> {
   private handleCanvasPointerDown = (
     event: React.PointerEvent<HTMLElement>,
   ) => {
+    const scenePointer = viewportCoordsToSceneCoords(event, this.state);
+    const { x: scenePointerX, y: scenePointerY } = scenePointer;
+    this.lastPointerMoveCoords = {
+      x: scenePointerX,
+      y: scenePointerY,
+    };
+
     const target = event.target as HTMLElement;
     // capture subsequent pointer events to the canvas
     // this makes other elements non-interactive until pointer up
@@ -7083,29 +7157,19 @@ class App extends React.Component<AppProps, AppState> {
   private handleCanvasPointerUp = (
     event: React.PointerEvent<HTMLCanvasElement>,
   ) => {
+    this.resetDelayedBindMode();
     this.removePointer(event);
     this.lastPointerUpEvent = event;
-
-    // Cancel any pending timeout for bind mode change
-    if (this.state.bindMode === "inside" || this.state.bindMode === "skip") {
-      if (this.bindModeHandler) {
-        clearTimeout(this.bindModeHandler);
-        this.bindModeHandler = null;
-      }
-
-      // We need this iteration to complete binding and change
-      // back to orbit mode after that
-      setTimeout(() =>
-        this.setState({
-          bindMode: "orbit",
-        }),
-      );
-    }
 
     const scenePointer = viewportCoordsToSceneCoords(
       { clientX: event.clientX, clientY: event.clientY },
       this.state,
     );
+    const { x: scenePointerX, y: scenePointerY } = scenePointer;
+    this.lastPointerMoveCoords = {
+      x: scenePointerX,
+      y: scenePointerY,
+    };
     const clicklength =
       event.timeStamp - (this.lastPointerDownEvent?.timeStamp ?? 0);
 
@@ -7205,10 +7269,7 @@ class App extends React.Component<AppProps, AppState> {
    * pointerup handlers manually
    */
   private maybeCleanupAfterMissingPointerUp = (event: PointerEvent | null) => {
-    if (this.bindModeHandler) {
-      clearTimeout(this.bindModeHandler);
-      this.bindModeHandler = null;
-    }
+    this.resetDelayedBindMode();
 
     this.setState({
       bindMode: "orbit",
@@ -8337,28 +8398,8 @@ class App extends React.Component<AppProps, AppState> {
           this.state,
           { newArrow: true },
         );
-      }
 
-      if (isSimpleArrow(element)) {
-        if (this.bindModeHandler) {
-          clearTimeout(this.bindModeHandler);
-          this.bindModeHandler = null;
-        }
-
-        this.bindModeHandler = setTimeout(() => {
-          this.setState({
-            bindMode: "inside",
-            selectedLinearElement: this.state.selectedLinearElement
-              ? {
-                  ...this.state.selectedLinearElement,
-                  pointerDownState: {
-                    ...this.state.selectedLinearElement?.pointerDownState,
-                    arrowStartIsInside: !!boundElement,
-                  },
-                }
-              : null,
-          });
-        }, BIND_MODE_TIMEOUT);
+        this.handleDelayedBindModeChange(element, boundElement);
       }
 
       this.setState((prevState) => {
@@ -8378,6 +8419,7 @@ class App extends React.Component<AppProps, AppState> {
                 pointerDownState.origin.y,
               ),
             },
+            selectedPointsIndices: [1],
           };
           nextSelectedElementIds = makeNextSelectedElementIds(
             { [element.id]: true },
@@ -8750,7 +8792,6 @@ class App extends React.Component<AppProps, AppState> {
           linearElementEditor.elementId,
           elementsMap,
         );
-        let [x, y] = [pointerCoords.x, pointerCoords.y];
 
         if (isBindingElement(element)) {
           const hoveredElement = getHoveredElementForBinding(
@@ -8759,122 +8800,19 @@ class App extends React.Component<AppProps, AppState> {
             elementsMap,
           );
 
-          // Timed bind mode handler for arrow elements
-          if (this.state.bindMode === "orbit") {
-            if (this.bindModeHandler && !hoveredElement) {
-              clearTimeout(this.bindModeHandler);
-              this.bindModeHandler = null;
-            } else if (!this.bindModeHandler && hoveredElement) {
-              this.bindModeHandler = setTimeout(() => {
-                if (hoveredElement) {
-                  flushSync(() => {
-                    this.setState({
-                      bindMode: "inside",
-                      selectedLinearElement: this.state.selectedLinearElement
-                        ? {
-                            ...this.state.selectedLinearElement,
-                            pointerDownState: {
-                              ...this.state.selectedLinearElement
-                                .pointerDownState,
-                              arrowStartIsInside: true,
-                            },
-                          }
-                        : null,
-                    });
-                  });
-
-                  const [lastX, lastY] =
-                    hoveredElement && element.startBinding?.mode !== "inside"
-                      ? snapToCenter(
-                          hoveredElement,
-                          elementsMap,
-                          pointFrom<GlobalPoint>(
-                            this.lastPointerMoveCoords?.x ??
-                              pointerDownState.origin.x,
-                            this.lastPointerMoveCoords?.y ??
-                              pointerDownState.origin.y,
-                          ),
-                        )
-                      : [
-                          this.lastPointerMoveCoords?.x ??
-                            pointerDownState.origin.x,
-                          this.lastPointerMoveCoords?.y ??
-                            pointerDownState.origin.y,
-                        ];
-
-                  const newState = LinearElementEditor.handlePointDragging(
-                    event,
-                    this,
-                    lastX,
-                    lastY,
-                    linearElementEditor,
-                  );
-                  if (newState) {
-                    pointerDownState.lastCoords.x =
-                      this.lastPointerMoveCoords?.x ??
-                      pointerDownState.origin.x;
-                    pointerDownState.lastCoords.y =
-                      this.lastPointerMoveCoords?.y ??
-                      pointerDownState.origin.y;
-                    pointerDownState.drag.hasOccurred = true;
-
-                    flushSync(() => {
-                      this.setState(newState);
-                    });
-                  }
-                  const selectedPointIndices =
-                    this.state.selectedLinearElement?.selectedPointsIndices;
-                  const nextPoint = pointFrom<LocalPoint>(
-                    (this.lastPointerMoveCoords?.x ??
-                      pointerDownState.origin.x) - element.x,
-                    (this.lastPointerMoveCoords?.y ??
-                      pointerDownState.origin.y) - element.y,
-                  );
-                  if (
-                    selectedPointIndices?.length === 1 &&
-                    selectedPointIndices[0] === 0
-                  ) {
-                    this.scene.mutateElement(element, {
-                      points: [nextPoint, ...element.points.slice(1)],
-                    });
-                  } else {
-                    this.scene.mutateElement(element, {
-                      points: [...element.points.slice(0, -1), nextPoint],
-                    });
-                  }
-                }
-
-                this.bindModeHandler = null;
-              }, BIND_MODE_TIMEOUT);
-            }
-          } else if (!hoveredElement) {
-            flushSync(() => {
-              this.setState({
-                bindMode: "orbit",
-              });
-            });
-          }
-
-          [x, y] =
-            hoveredElement && element.startBinding?.mode !== "inside"
-              ? snapToCenter(
-                  hoveredElement,
-                  elementsMap,
-                  pointFrom<GlobalPoint>(pointerCoords.x, pointerCoords.y),
-                )
-              : [pointerCoords.x, pointerCoords.y];
+          this.handleDelayedBindModeChange(element, hoveredElement);
         }
 
         const newState = LinearElementEditor.handlePointDragging(
           event,
           this,
-          x,
-          y,
+          pointerCoords.x,
+          pointerCoords.y,
           linearElementEditor,
         );
         if (newState) {
-          pointerDownState.lastCoords.x = x;
-          pointerDownState.lastCoords.y = y;
+          pointerDownState.lastCoords.x = pointerCoords.x;
+          pointerDownState.lastCoords.y = pointerCoords.y;
           pointerDownState.drag.hasOccurred = true;
 
           if (
@@ -9628,7 +9566,6 @@ class App extends React.Component<AppProps, AppState> {
 
       // just in case, tool changes mid drag, always clean up
       this.lassoTrail.endPath();
-      this.lastPointerMoveCoords = null;
 
       SnapCache.setReferenceSnapPoints(null);
       SnapCache.setVisibleGaps(null);
@@ -9680,10 +9617,7 @@ class App extends React.Component<AppProps, AppState> {
         });
       }
 
-      if (this.bindModeHandler) {
-        clearTimeout(this.bindModeHandler);
-        this.bindModeHandler = null;
-      }
+      this.resetDelayedBindMode();
 
       this.setState({
         selectedElementsAreBeingDragged: false,
