@@ -16,7 +16,6 @@ import {
   throttleRAF,
 } from "@excalidraw/common";
 
-import { FIXED_BINDING_DISTANCE } from "@excalidraw/element";
 import { LinearElementEditor } from "@excalidraw/element";
 import {
   getOmitSidesForDevice,
@@ -192,11 +191,11 @@ const renderBindingHighlightForBindableElement = (
   context: CanvasRenderingContext2D,
   element: ExcalidrawBindableElement,
   elementsMap: ElementsMap,
-  zoom: InteractiveCanvasAppState["zoom"],
 ) => {
-  const padding = 5;
-
-  context.fillStyle = "rgba(0,0,0,.05)";
+  context.lineWidth = 1;
+  context.strokeStyle = element.strokeColor;
+  context.shadowColor = element.strokeColor;
+  context.shadowBlur = 10;
 
   switch (element.type) {
     case "rectangle":
@@ -206,28 +205,20 @@ const renderBindingHighlightForBindableElement = (
     case "embeddable":
     case "frame":
     case "magicframe":
-      drawHighlightForRectWithRotation(context, element, elementsMap, padding);
+      drawHighlightForRectWithRotation(context, element, elementsMap);
       break;
     case "diamond":
-      drawHighlightForDiamondWithRotation(
-        context,
-        padding,
-        element,
-        elementsMap,
-      );
+      drawHighlightForDiamondWithRotation(context, element, elementsMap);
       break;
     case "ellipse": {
       const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
       const width = x2 - x1;
       const height = y2 - y1;
 
-      context.strokeStyle = "rgba(0,0,0,.05)";
-      context.lineWidth = padding - FIXED_BINDING_DISTANCE;
-
       strokeEllipseWithRotation(
         context,
-        width + padding + FIXED_BINDING_DISTANCE,
-        height + padding + FIXED_BINDING_DISTANCE,
+        width,
+        height,
         x1 + width / 2,
         y1 + height / 2,
         element.angle,
@@ -241,7 +232,6 @@ const renderBindingHighlightForSuggestedPointBinding = (
   context: CanvasRenderingContext2D,
   suggestedBinding: SuggestedPointBinding,
   elementsMap: ElementsMap,
-  zoom: InteractiveCanvasAppState["zoom"],
 ) => {
   const [element, startOrEnd] = suggestedBinding;
 
@@ -343,7 +333,7 @@ const renderBindingHighlight = (
 
   context.save();
   context.translate(appState.scrollX, appState.scrollY);
-  renderHighlight(context, suggestedBinding as any, elementsMap, appState.zoom);
+  renderHighlight(context, suggestedBinding as any, elementsMap);
 
   context.restore();
 };
