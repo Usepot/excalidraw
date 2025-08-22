@@ -6210,6 +6210,7 @@ class App extends React.Component<AppProps, AppState> {
             newElement,
             "end",
             this.scene,
+            pointFrom<GlobalPoint>(scenePointerX, scenePointerY),
           ),
         });
       } else {
@@ -9380,6 +9381,7 @@ class App extends React.Component<AppProps, AppState> {
                 newElement,
                 "end",
                 this.scene,
+                pointFrom<GlobalPoint>(pointerCoords.x, pointerCoords.y),
               ),
             });
           }

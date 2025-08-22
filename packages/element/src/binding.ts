@@ -698,17 +698,24 @@ export const maybeSuggestBindingsForBindingElementAtCoords = (
   linearElement: NonDeleted<ExcalidrawArrowElement>,
   startOrEndOrBoth: "start" | "end" | "both",
   scene: Scene,
+  pointerCoords: GlobalPoint,
 ): ExcalidrawBindableElement[] => {
-  const startCoords = LinearElementEditor.getPointAtIndexGlobalCoordinates(
-    linearElement,
-    0,
-    scene.getNonDeletedElementsMap(),
-  );
-  const endCoords = LinearElementEditor.getPointAtIndexGlobalCoordinates(
-    linearElement,
-    -1,
-    scene.getNonDeletedElementsMap(),
-  );
+  const startCoords =
+    startOrEndOrBoth === "start"
+      ? pointerCoords
+      : LinearElementEditor.getPointAtIndexGlobalCoordinates(
+          linearElement,
+          0,
+          scene.getNonDeletedElementsMap(),
+        );
+  const endCoords =
+    startOrEndOrBoth === "end"
+      ? pointerCoords
+      : LinearElementEditor.getPointAtIndexGlobalCoordinates(
+          linearElement,
+          -1,
+          scene.getNonDeletedElementsMap(),
+        );
   const startHovered = getHoveredElementForBinding(
     startCoords,
     scene.getNonDeletedElements(),

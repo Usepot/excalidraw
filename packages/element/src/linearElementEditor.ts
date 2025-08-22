@@ -466,6 +466,7 @@ export class LinearElementEditor {
               ? "start"
               : "end",
             app.scene,
+            pointFrom<GlobalPoint>(scenePointerX, scenePointerY),
           );
         }
       }
