@@ -44,7 +44,6 @@ import {
 } from "@excalidraw/element";
 
 import { getCommonBounds, getElementAbsoluteCoords } from "@excalidraw/element";
-import chroma from "chroma-js";
 
 import type {
   SuggestedBinding,
@@ -194,15 +193,8 @@ const renderBindingHighlightForBindableElement = (
   context.translate(element.x, element.y);
 
   const rc = rough.canvas(context.canvas);
-  const drawable = ShapeCache.get(element)!;
-  const originalColor = drawable.options.stroke;
-  const originalStrokeWidth = drawable.options.strokeWidth;
-
-  drawable.options.stroke = chroma(drawable.options.stroke).desaturate().hex();
-  drawable.options.strokeWidth = drawable.options.strokeWidth * 1.1;
+  const drawable = ShapeCache.generateBindableElementHighlight(element);
   rc.draw(drawable);
-  drawable.options.stroke = originalColor;
-  drawable.options.strokeWidth = originalStrokeWidth;
 };
 
 const renderBindingHighlightForSuggestedPointBinding = (

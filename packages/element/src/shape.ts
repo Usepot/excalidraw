@@ -24,6 +24,7 @@ import {
 } from "@excalidraw/common";
 
 import { RoughGenerator } from "roughjs/bin/generator";
+import chroma from "chroma-js";
 
 import type { GlobalPoint } from "@excalidraw/math";
 
@@ -70,6 +71,7 @@ import type {
   ExcalidrawFreeDrawElement,
   ElementsMap,
   ExcalidrawLineElement,
+  ExcalidrawBindableElement,
 } from "./types";
 
 import type { Drawable, Options } from "roughjs/bin/core";
@@ -103,6 +105,33 @@ export class ShapeCache {
 
   public static destroy = () => {
     ShapeCache.cache = new WeakMap();
+  };
+
+  public static generateBindableElementHighlight = <
+    T extends ExcalidrawBindableElement,
+  >(
+    element: T,
+    renderConfig?: {
+      isExporting: boolean;
+      canvasBackgroundColor: AppState["viewBackgroundColor"];
+      embedsValidationStatus: EmbedsValidationStatus;
+    },
+  ) => {
+    const shape = generateElementShape(
+      element,
+      ShapeCache.rg,
+      renderConfig || {
+        isExporting: false,
+        canvasBackgroundColor: COLOR_PALETTE.white,
+        embedsValidationStatus: null,
+      },
+    ) as Drawable;
+
+    shape.options.fill = "transparent";
+    shape.options.stroke = chroma(shape.options.stroke).desaturate().hex();
+    shape.options.strokeWidth = shape.options.strokeWidth * 1.1;
+
+    return shape;
   };
 
   /**
