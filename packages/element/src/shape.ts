@@ -24,7 +24,6 @@ import {
 } from "@excalidraw/common";
 
 import { RoughGenerator } from "roughjs/bin/generator";
-import chroma from "chroma-js";
 
 import type { GlobalPoint } from "@excalidraw/math";
 
@@ -128,7 +127,7 @@ export class ShapeCache {
     ) as Drawable;
 
     shape.options.fill = "transparent";
-    shape.options.stroke = chroma(shape.options.stroke).desaturate().hex();
+    shape.options.stroke = "#ff028d";
     shape.options.strokeWidth = shape.options.strokeWidth * 1.1;
 
     return shape;

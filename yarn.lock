@@ -2840,11 +2840,6 @@
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.3.0.tgz#23509ebc1fa32f1b4d50d6a66c4032d5b8eaabdc"
   integrity sha512-/ceqdqeRraGolFTcfoXNiqjyQhZzbINDngeoAq9GoHa8PPK1yNzTaxWjA6BFWp5Ua9JpXEMSS4s5i9tS0hOJtw==
 
-"@types/chroma-js@3.1.1":
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/@types/chroma-js/-/chroma-js-3.1.1.tgz#92cac57fb32d642ce156dbc4c052b5e3a3a25db1"
-  integrity sha512-SFCr4edNkZ1bGaLzGz7rgR1bRzVX4MmMxwsIa3/Bh6ose8v+hRpneoizHv0KChdjxaXyjRtaMq7sCuZSzPomQA==
-
 "@types/d3-scale-chromatic@^3.0.0":
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/@types/d3-scale-chromatic/-/d3-scale-chromatic-3.1.0.tgz#dc6d4f9a98376f18ea50bad6c39537f1b5463c39"
@@ -4049,11 +4044,6 @@ chownr@^1.1.1:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/chownr/-/chownr-1.1.4.tgz#6fc9d7b42d32a583596337666e7d08084da2cc6b"
   integrity sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg==
-
-chroma-js@3.1.2:
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/chroma-js/-/chroma-js-3.1.2.tgz#cfb807045182228574eae5380587cdb830e985d6"
-  integrity sha512-IJnETTalXbsLx1eKEgx19d5L6SRM7cH4vINw/99p/M11HCuXGRWL+6YmCm7FWFGIo6dtWuQoQi1dc5yQ7ESIHg==
 
 chrome-trace-event@^1.0.2:
   version "1.0.4"
