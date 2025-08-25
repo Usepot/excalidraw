@@ -941,6 +941,12 @@ class App extends React.Component<AppProps, AppState> {
             "The selectedLinearElement is expected to not change while a bind mode timeout is ticking",
           );
 
+          // Once the start is set to inside binding, it remains so
+          const arrowStartIsInside =
+            this.state.selectedLinearElement.pointerDownState
+              .arrowStartIsInside ||
+            arrow.startBinding?.elementId === hoveredElement.id;
+
           // Change the global binding mode
           this.setState({
             bindMode: "inside",
@@ -948,7 +954,7 @@ class App extends React.Component<AppProps, AppState> {
               ...this.state.selectedLinearElement,
               pointerDownState: {
                 ...this.state.selectedLinearElement.pointerDownState,
-                arrowStartIsInside: true,
+                arrowStartIsInside,
               },
             },
           });
