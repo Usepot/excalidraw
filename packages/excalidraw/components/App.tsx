@@ -8816,6 +8816,8 @@ class App extends React.Component<AppProps, AppState> {
           pointerDownState.lastCoords.y = pointerCoords.y;
           pointerDownState.drag.hasOccurred = true;
 
+          // NOTE: Optimize setState calls because it
+          // affects history and performance
           if (
             !isShallowEqual(
               newState.suggestedBindings ?? [],
@@ -8828,7 +8830,9 @@ class App extends React.Component<AppProps, AppState> {
             newState.selectedLinearElement?.hoverPointIndex !==
               this.state.selectedLinearElement?.hoverPointIndex ||
             newState.selectedLinearElement?.customLineAngle !==
-              this.state.selectedLinearElement?.customLineAngle
+              this.state.selectedLinearElement?.customLineAngle ||
+            this.state.selectedLinearElement.isDragging !==
+              newState.selectedLinearElement?.isDragging
           ) {
             this.setState(newState);
           }
