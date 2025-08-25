@@ -8,7 +8,7 @@ import {
   getNormalizedCanvasDimensions,
 } from "@excalidraw/excalidraw/renderer/helpers";
 import { type AppState } from "@excalidraw/excalidraw/types";
-import { arrayToMap, invariant, throttleRAF } from "@excalidraw/common";
+import { arrayToMap, throttleRAF } from "@excalidraw/common";
 import { useCallback } from "react";
 
 import {
@@ -181,12 +181,13 @@ const renderBindings = (
 
     if (isArrowElement(element)) {
       if (element.startBinding) {
-        invariant(
-          elementsMap
+        if (
+          !elementsMap
             .get(element.startBinding.elementId)
-            ?.boundElements?.find((e) => e.id === element.id),
-          "Missing record in boundElements for arrow",
-        );
+            ?.boundElements?.find((e) => e.id === element.id)
+        ) {
+          return;
+        }
 
         _renderBinding(
           context,
@@ -200,6 +201,13 @@ const renderBindings = (
       }
 
       if (element.endBinding) {
+        if (
+          !elementsMap
+            .get(element.endBinding.elementId)
+            ?.boundElements?.find((e) => e.id === element.id)
+        ) {
+          return;
+        }
         _renderBinding(
           context,
           element.endBinding,

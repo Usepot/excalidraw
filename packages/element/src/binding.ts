@@ -1,8 +1,10 @@
 import {
   KEYS,
   arrayToMap,
+  debugDrawPoint,
   invariant,
   isAlwaysInsideBinding,
+  isDevEnv,
   tupleToCoors,
 } from "@excalidraw/common";
 
@@ -588,7 +590,7 @@ export const getBindingStrategyForDraggingBindingElementEndpoints = (
 
   // Handle new arrow creation separately, as it is special
   if (opts?.newArrow) {
-    return bindingStrategyForNewSimpleArrowEndpointDragging(
+    const { start, end } = bindingStrategyForNewSimpleArrowEndpointDragging(
       arrow,
       draggingPoints,
       elementsMap,
@@ -600,6 +602,17 @@ export const getBindingStrategyForDraggingBindingElementEndpoints = (
       appState,
       globalBindMode,
     );
+
+    if (isDevEnv()) {
+      if (start?.focusPoint) {
+        debugDrawPoint(start.focusPoint);
+      }
+      if (end?.focusPoint) {
+        debugDrawPoint(end.focusPoint);
+      }
+    }
+
+    return { start, end };
   }
 
   // Only the start point is dragged
@@ -621,6 +634,15 @@ export const getBindingStrategyForDraggingBindingElementEndpoints = (
       { appState },
     );
 
+    if (isDevEnv()) {
+      if (current?.focusPoint) {
+        debugDrawPoint(current.focusPoint);
+      }
+      if (other?.focusPoint) {
+        debugDrawPoint(other.focusPoint);
+      }
+    }
+
     return { start: current, end: other };
   }
 
@@ -641,6 +663,15 @@ export const getBindingStrategyForDraggingBindingElementEndpoints = (
       globalBindMode,
       { appState },
     );
+
+    if (isDevEnv()) {
+      if (current?.focusPoint) {
+        debugDrawPoint(current.focusPoint);
+      }
+      if (other?.focusPoint) {
+        debugDrawPoint(other.focusPoint);
+      }
+    }
 
     return { start: other, end: current };
   }
