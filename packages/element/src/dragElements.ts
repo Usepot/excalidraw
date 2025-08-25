@@ -140,8 +140,11 @@ export const dragSelectedElements = (
         simultaneouslyUpdated: Array.from(elementsToUpdate),
       });
     } else if (
-      // NOTE: Add a little initial drag to the arrow dragging to avoid
-      // accidentally unbinding the arrow when the user just wants to select it.
+      // NOTE: Add a little initial drag to the arrow dragging when the arrow
+      // is the single element being dragged to avoid accidentally unbinding
+      // the arrow when the user just wants to select it.
+
+      elementsToUpdate.size > 1 ||
       Math.max(Math.abs(adjustedOffset.x), Math.abs(adjustedOffset.y)) >
         DRAGGING_THRESHOLD ||
       (!element.startBinding && !element.endBinding)
