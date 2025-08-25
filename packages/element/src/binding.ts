@@ -39,6 +39,7 @@ import {
   getHoveredElementForBinding,
   hitElementItself,
   intersectElementWithLineSegment,
+  isPointInElement,
 } from "./collision";
 import { distanceToElement } from "./distance";
 import {
@@ -1293,43 +1294,22 @@ export const snapToCenter = (
   element: ExcalidrawBindableElement,
   elementsMap: ElementsMap,
   p: GlobalPoint,
-) => {
-  const extent = Math.min(element.width, element.height);
-  const center = elementCenterPoint(element, elementsMap);
-  const nonRotated = pointRotateRads(p, center, -element.angle as Radians);
-  if (isRectanguloidElement(element)) {
-    if (
-      Math.abs(nonRotated[0] - (element.x + element.width / 2)) >
-        element.width * 0.9 ||
-      Math.abs(nonRotated[1] - (element.y + element.height / 2)) >
-        element.height * 0.9
-    ) {
-      return pointFrom<GlobalPoint>(center[0], center[1]);
-    }
-  }
+): GlobalPoint => {
+  const percent = 0.94868; // 90% by volume
 
-  if (element.type === "diamond") {
-    const center = elementCenterPoint(element, elementsMap);
-    const nonRotated = pointRotateRads(p, center, -element.angle as Radians);
-    const cx = element.x + element.width / 2;
-    const cy = element.y + element.height / 2;
-    const scale = 0.9; // 90% sized inner diamond
-    const halfW = (element.width / 2) * scale;
-    const halfH = (element.height / 2) * scale;
-
-    if (halfW > 0 && halfH > 0) {
-      const dx = Math.abs(nonRotated[0] - cx);
-      const dy = Math.abs(nonRotated[1] - cy);
-      if (dx / halfW + dy / halfH <= 1) {
-        return pointFrom<GlobalPoint>(center[0], center[1]);
-      }
-    }
-  }
-
-  if (pointDistance(nonRotated, center) < extent * 0.5) {
-    return pointFrom<GlobalPoint>(center[0], center[1]);
-  }
-  return p;
+  return isPointInElement(
+    p,
+    {
+      ...element,
+      x: element.x - (element.width * (1 - percent)) / 2,
+      y: element.y - (element.height * (1 - percent)) / 2,
+      width: element.width * percent,
+      height: element.height * percent,
+    },
+    elementsMap,
+  )
+    ? elementCenterPoint(element, elementsMap)
+    : p;
 };
 
 const snapToMid = (
