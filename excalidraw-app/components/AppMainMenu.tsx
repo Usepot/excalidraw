@@ -239,30 +239,60 @@ export const AppMainMenu: React.FC<{
       <MainMenu.Separator />
       <MainMenu.Group title="Boards">
         <MainMenu.ItemCustom>
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <select
-              value={selectedBoardId || ""}
-              onChange={(e) => setSelectedBoardId(e.target.value || null)}
-              style={{ maxWidth: 200 }}
-            >
-              <option value="">(none selected)</option>
-              {boards.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-            <button onClick={handleLoadSelectedBoard}>Load</button>
-            <button onClick={handleSaveSelectedBoard}>Save</button>
-            <button onClick={handleSaveAsNewBoard}>Save as New</button>
-          </div>
+          <select
+            value={selectedBoardId || ""}
+            onChange={(e) => setSelectedBoardId(e.target.value || null)}
+            style={{
+              width: "100%",
+              padding: "4px 8px",
+              border: "1px solid var(--color-surface-low)",
+              borderRadius: "4px",
+              background: "var(--color-surface-lowest)",
+              color: "var(--color-on-surface)",
+              fontSize: "0.875rem",
+              fontFamily: "inherit",
+              outline: "none",
+              cursor: "pointer",
+              transition: "all 0.15s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--color-surface-low)";
+              e.currentTarget.style.borderColor = "var(--color-surface-mid)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--color-surface-lowest)";
+              e.currentTarget.style.borderColor = "var(--color-surface-low)";
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.boxShadow = "0 0 0 2px var(--focus-highlight-color)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            <option value="">(none selected)</option>
+            {boards.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
         </MainMenu.ItemCustom>
-        <MainMenu.ItemCustom>
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <button onClick={handleRenameSelectedBoard}>Rename</button>
-            <button onClick={handleDeleteSelectedBoard}>Delete</button>
-          </div>
-        </MainMenu.ItemCustom>
+        <MainMenu.Item onClick={handleLoadSelectedBoard}>
+          Load Board
+        </MainMenu.Item>
+        <MainMenu.Item onClick={handleSaveSelectedBoard}>
+          Save Board
+        </MainMenu.Item>
+        <MainMenu.Item onClick={handleSaveAsNewBoard}>
+          Save as New
+        </MainMenu.Item>
+        <MainMenu.Item onClick={handleRenameSelectedBoard}>
+          Rename Board
+        </MainMenu.Item>
+        <MainMenu.Item onClick={handleDeleteSelectedBoard}>
+          Delete Board
+        </MainMenu.Item>
       </MainMenu.Group>
       <MainMenu.Separator />
       <MainMenu.ItemLink
