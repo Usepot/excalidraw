@@ -1266,7 +1266,7 @@ export const snapToCenter = (
   elementsMap: ElementsMap,
   p: GlobalPoint,
 ): GlobalPoint => {
-  const percent = 0.94868; // 90% by volume
+  const percent = 0.8;
 
   const isPointDeepInside = isPointInElement(
     p,
