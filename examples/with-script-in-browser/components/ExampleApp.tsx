@@ -41,6 +41,51 @@ import "./ExampleApp.scss";
 
 import type { ResolvablePromise } from "../utils";
 
+type SavedBoardMeta = {
+  id: string;
+  name: string;
+  updatedAt: number;
+};
+
+type SavedBoardData = {
+  elements: any;
+  appState: any;
+  files: any;
+};
+
+const BOARDS_LIST_KEY = "excalidraw.example.boards:list";
+const boardDataKey = (id: string) => `excalidraw.example.boards:data:${id}`;
+
+const readBoards = (): SavedBoardMeta[] => {
+  try {
+    const raw = localStorage.getItem(BOARDS_LIST_KEY);
+    return raw ? (JSON.parse(raw) as SavedBoardMeta[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeBoards = (boards: SavedBoardMeta[]) => {
+  localStorage.setItem(BOARDS_LIST_KEY, JSON.stringify(boards));
+};
+
+const readBoardData = (id: string): SavedBoardData | null => {
+  try {
+    const raw = localStorage.getItem(boardDataKey(id));
+    return raw ? (JSON.parse(raw) as SavedBoardData) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeBoardData = (id: string, data: SavedBoardData) => {
+  localStorage.setItem(boardDataKey(id), JSON.stringify(data));
+};
+
+const deleteBoardData = (id: string) => {
+  localStorage.removeItem(boardDataKey(id));
+};
+
 type Comment = {
   x: number;
   y: number;
@@ -116,6 +161,112 @@ export default function ExampleApp({
     {},
   );
   const [comment, setComment] = useState<Comment | null>(null);
+
+  const [boards, setBoards] = useState<SavedBoardMeta[]>(readBoards());
+  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(
+    boards[0]?.id || null,
+  );
+  const [newBoardName, setNewBoardName] = useState<string>("");
+
+  const handleLoadSelectedBoard = () => {
+    if (!selectedBoardId) {
+      window.alert("Select a board first");
+      return;
+    }
+    const data = readBoardData(selectedBoardId);
+    if (!data) {
+      window.alert("Board data missing");
+      return;
+    }
+    excalidrawAPI?.updateScene({
+      elements: data.elements,
+      appState: data.appState,
+      files: data.files,
+    });
+  };
+
+  const handleSaveSelectedBoard = () => {
+    if (!excalidrawAPI) {
+      return;
+    }
+    if (!selectedBoardId) {
+      window.alert("Select a board or use Save as New");
+      return;
+    }
+    const meta = boards.find((b) => b.id === selectedBoardId);
+    if (!meta) {
+      return;
+    }
+    const payload: SavedBoardData = {
+      elements: excalidrawAPI.getSceneElements(),
+      appState: excalidrawAPI.getAppState(),
+      files: excalidrawAPI.getFiles(),
+    };
+    writeBoardData(selectedBoardId, payload);
+    const updated: SavedBoardMeta = { ...meta, updatedAt: Date.now() };
+    const next = boards.map((b) => (b.id === updated.id ? updated : b));
+    setBoards(next);
+    writeBoards(next);
+    window.alert(`Saved board: ${updated.name}`);
+  };
+
+  const handleSaveAsNewBoard = () => {
+    if (!excalidrawAPI) {
+      return;
+    }
+    const defaultName = newBoardName.trim() || `Board ${boards.length + 1}`;
+    const name = window.prompt("New board name", defaultName)?.trim();
+    if (!name) {
+      return;
+    }
+    const id = nanoid();
+    const payload: SavedBoardData = {
+      elements: excalidrawAPI.getSceneElements(),
+      appState: excalidrawAPI.getAppState(),
+      files: excalidrawAPI.getFiles(),
+    };
+    writeBoardData(id, payload);
+    const meta: SavedBoardMeta = { id, name, updatedAt: Date.now() };
+    const next = [meta, ...boards];
+    setBoards(next);
+    writeBoards(next);
+    setSelectedBoardId(id);
+    setNewBoardName("");
+  };
+
+  const handleRenameSelectedBoard = () => {
+    if (!selectedBoardId) {
+      window.alert("Select a board first");
+      return;
+    }
+    const meta = boards.find((b) => b.id === selectedBoardId);
+    if (!meta) {
+      return;
+    }
+    const nextName = window.prompt("Rename board", meta.name)?.trim();
+    if (!nextName) {
+      return;
+    }
+    const next = boards.map((b) => (b.id === selectedBoardId ? { ...b, name: nextName } : b));
+    setBoards(next);
+    writeBoards(next);
+  };
+
+  const handleDeleteSelectedBoard = () => {
+    if (!selectedBoardId) {
+      window.alert("Select a board first");
+      return;
+    }
+    const confirmed = window.confirm("Delete this board?");
+    if (!confirmed) {
+      return;
+    }
+    deleteBoardData(selectedBoardId);
+    const next = boards.filter((b) => b.id !== selectedBoardId);
+    setBoards(next);
+    writeBoards(next);
+    setSelectedBoardId(next[0]?.id || null);
+  };
 
   const initialStatePromiseRef = useRef<{
     promise: ResolvablePromise<ExcalidrawInitialDataState | null>;
@@ -626,6 +777,33 @@ export default function ExampleApp({
           <MainMenu.DefaultItems.Socials />
         </MainMenu.Group>
         <MainMenu.Separator />
+        <MainMenu.Group title="Boards">
+          <MainMenu.ItemCustom>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <select
+                value={selectedBoardId || ""}
+                onChange={(e) => setSelectedBoardId(e.target.value || null)}
+                style={{ maxWidth: 180 }}
+              >
+                <option value="">(none selected)</option>
+                {boards.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+              <button onClick={handleLoadSelectedBoard}>Load</button>
+              <button onClick={handleSaveSelectedBoard}>Save</button>
+              <button onClick={handleSaveAsNewBoard}>Save as New</button>
+            </div>
+          </MainMenu.ItemCustom>
+          <MainMenu.ItemCustom>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <button onClick={handleRenameSelectedBoard}>Rename</button>
+              <button onClick={handleDeleteSelectedBoard}>Delete</button>
+            </div>
+          </MainMenu.ItemCustom>
+        </MainMenu.Group>
         <MainMenu.ItemCustom>
           <button
             style={{ height: "2rem" }}
@@ -795,6 +973,148 @@ export default function ExampleApp({
           >
             <div>x: {pointerData?.pointer.x ?? 0}</div>
             <div>y: {pointerData?.pointer.y ?? 0}</div>
+          </div>
+          <hr />
+          <div style={{ display: "grid", gap: "0.5rem" }}>
+            <strong>Boards</strong>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <select
+                value={selectedBoardId || ""}
+                onChange={(e) => setSelectedBoardId(e.target.value || null)}
+              >
+                <option value="">(none selected)</option>
+                {boards.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  if (!selectedBoardId) {
+                    window.alert("Select a board first");
+                    return;
+                  }
+                  const data = readBoardData(selectedBoardId);
+                  if (!data) {
+                    window.alert("Board data missing");
+                    return;
+                  }
+                  excalidrawAPI?.updateScene({
+                    elements: data.elements,
+                    appState: data.appState,
+                    files: data.files,
+                  });
+                }}
+              >
+                Load
+              </button>
+              <button
+                onClick={() => {
+                  if (!excalidrawAPI) {
+                    return;
+                  }
+                  if (!selectedBoardId) {
+                    window.alert("Select a board or use Save as New");
+                    return;
+                  }
+                  const meta = boards.find((b) => b.id === selectedBoardId);
+                  if (!meta) {
+                    return;
+                  }
+                  const payload: SavedBoardData = {
+                    elements: excalidrawAPI.getSceneElements(),
+                    appState: excalidrawAPI.getAppState(),
+                    files: excalidrawAPI.getFiles(),
+                  };
+                  writeBoardData(selectedBoardId, payload);
+                  const updated: SavedBoardMeta = {
+                    ...meta,
+                    updatedAt: Date.now(),
+                  };
+                  const next = boards.map((b) => (b.id === updated.id ? updated : b));
+                  setBoards(next);
+                  writeBoards(next);
+                  window.alert(`Saved board: ${updated.name}`);
+                }}
+              >
+                Save
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <input
+                placeholder="New board name"
+                value={newBoardName}
+                onChange={(e) => setNewBoardName(e.target.value)}
+              />
+              <button
+                onClick={() => {
+                  if (!excalidrawAPI) {
+                    return;
+                  }
+                  const name = newBoardName.trim() || `Board ${boards.length + 1}`;
+                  const id = nanoid();
+                  const payload: SavedBoardData = {
+                    elements: excalidrawAPI.getSceneElements(),
+                    appState: excalidrawAPI.getAppState(),
+                    files: excalidrawAPI.getFiles(),
+                  };
+                  writeBoardData(id, payload);
+                  const meta: SavedBoardMeta = { id, name, updatedAt: Date.now() };
+                  const next = [meta, ...boards];
+                  setBoards(next);
+                  writeBoards(next);
+                  setSelectedBoardId(id);
+                  setNewBoardName("");
+                }}
+              >
+                Save as New
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <button
+                onClick={() => {
+                  if (!selectedBoardId) {
+                    window.alert("Select a board first");
+                    return;
+                  }
+                  const meta = boards.find((b) => b.id === selectedBoardId);
+                  if (!meta) {
+                    return;
+                  }
+                  const nextName = window.prompt("Rename board", meta.name)?.trim();
+                  if (!nextName) {
+                    return;
+                  }
+                  const next = boards.map((b) =>
+                    b.id === selectedBoardId ? { ...b, name: nextName } : b,
+                  );
+                  setBoards(next);
+                  writeBoards(next);
+                }}
+              >
+                Rename
+              </button>
+              <button
+                onClick={() => {
+                  if (!selectedBoardId) {
+                    window.alert("Select a board first");
+                    return;
+                  }
+                  const confirmed = window.confirm("Delete this board?");
+                  if (!confirmed) {
+                    return;
+                  }
+                  deleteBoardData(selectedBoardId);
+                  const next = boards.filter((b) => b.id !== selectedBoardId);
+                  setBoards(next);
+                  writeBoards(next);
+                  setSelectedBoardId(next[0]?.id || null);
+                }}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
         <div className="excalidraw-wrapper">
