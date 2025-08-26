@@ -2039,7 +2039,13 @@ const pointDraggingUpdates = (
           newGlobalPointPosition = getOutlineAvoidingPoint(
             element,
             hoveredElement,
-            snapToCenter(hoveredElement, elementsMap, newGlobalPointPosition),
+            element.startBinding
+              ? snapToCenter(
+                  hoveredElement,
+                  elementsMap,
+                  newGlobalPointPosition,
+                )
+              : newGlobalPointPosition,
             pointIndex,
             elementsMap,
             customIntersector,
