@@ -1,10 +1,8 @@
 import {
   KEYS,
   arrayToMap,
-  debugDrawPoint,
   invariant,
   isAlwaysInsideBinding,
-  isDevEnv,
   tupleToCoors,
 } from "@excalidraw/common";
 
@@ -604,15 +602,6 @@ export const getBindingStrategyForDraggingBindingElementEndpoints = (
       globalBindMode,
     );
 
-    if (isDevEnv()) {
-      if (start?.focusPoint) {
-        debugDrawPoint(start.focusPoint);
-      }
-      if (end?.focusPoint) {
-        debugDrawPoint(end.focusPoint);
-      }
-    }
-
     return { start, end };
   }
 
@@ -635,15 +624,6 @@ export const getBindingStrategyForDraggingBindingElementEndpoints = (
       { appState },
     );
 
-    if (isDevEnv()) {
-      if (current?.focusPoint) {
-        debugDrawPoint(current.focusPoint);
-      }
-      if (other?.focusPoint) {
-        debugDrawPoint(other.focusPoint);
-      }
-    }
-
     return { start: current, end: other };
   }
 
@@ -664,15 +644,6 @@ export const getBindingStrategyForDraggingBindingElementEndpoints = (
       globalBindMode,
       { appState },
     );
-
-    if (isDevEnv()) {
-      if (current?.focusPoint) {
-        debugDrawPoint(current.focusPoint);
-      }
-      if (other?.focusPoint) {
-        debugDrawPoint(other.focusPoint);
-      }
-    }
 
     return { start: other, end: current };
   }
@@ -1297,19 +1268,19 @@ export const snapToCenter = (
 ): GlobalPoint => {
   const percent = 0.94868; // 90% by volume
 
-  return isPointInElement(
+  const isPointDeepInside = isPointInElement(
     p,
     {
       ...element,
-      x: element.x - (element.width * (1 - percent)) / 2,
-      y: element.y - (element.height * (1 - percent)) / 2,
+      x: element.x + (element.width * (1 - percent)) / 2,
+      y: element.y + (element.height * (1 - percent)) / 2,
       width: element.width * percent,
       height: element.height * percent,
     },
     elementsMap,
-  )
-    ? elementCenterPoint(element, elementsMap)
-    : p;
+  );
+
+  return isPointDeepInside ? elementCenterPoint(element, elementsMap) : p;
 };
 
 const snapToMid = (
