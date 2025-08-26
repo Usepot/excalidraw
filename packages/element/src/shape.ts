@@ -21,6 +21,7 @@ import {
   assertNever,
   COLOR_PALETTE,
   LINE_POLYGON_POINT_MERGE_DISTANCE,
+  THEME,
 } from "@excalidraw/common";
 
 import { RoughGenerator } from "roughjs/bin/generator";
@@ -32,6 +33,7 @@ import type { Mutable } from "@excalidraw/common/utility-types";
 import type {
   AppState,
   EmbedsValidationStatus,
+  InteractiveCanvasAppState,
 } from "@excalidraw/excalidraw/types";
 import type {
   ElementShape,
@@ -110,6 +112,7 @@ export class ShapeCache {
     T extends ExcalidrawBindableElement,
   >(
     element: T,
+    appState: Pick<InteractiveCanvasAppState, "theme">,
     renderConfig?: {
       isExporting: boolean;
       canvasBackgroundColor: AppState["viewBackgroundColor"];
@@ -127,7 +130,8 @@ export class ShapeCache {
     ) as Drawable;
 
     shape.options.fill = "transparent";
-    shape.options.stroke = "#ff028d";
+    shape.options.stroke =
+      appState.theme === THEME.DARK ? "#035da1" : "#6abdfc";
     shape.options.strokeWidth = shape.options.strokeWidth * 1.1;
 
     return shape;

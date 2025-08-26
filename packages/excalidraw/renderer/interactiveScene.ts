@@ -189,11 +189,16 @@ const renderSingleLinearPoint = <Point extends GlobalPoint | LocalPoint>(
 const renderBindingHighlightForBindableElement = (
   context: CanvasRenderingContext2D,
   element: ExcalidrawBindableElement,
+  _elementsMap: ElementsMap,
+  appState: Pick<InteractiveCanvasAppState, "theme">,
 ) => {
   context.translate(element.x, element.y);
 
   const rc = rough.canvas(context.canvas);
-  const drawable = ShapeCache.generateBindableElementHighlight(element);
+  const drawable = ShapeCache.generateBindableElementHighlight(
+    element,
+    appState,
+  );
   rc.draw(drawable);
 };
 
@@ -201,6 +206,7 @@ const renderBindingHighlightForSuggestedPointBinding = (
   context: CanvasRenderingContext2D,
   suggestedBinding: SuggestedPointBinding,
   elementsMap: ElementsMap,
+  appState: Pick<InteractiveCanvasAppState, "theme">,
 ) => {
   const [element, startOrEnd] = suggestedBinding;
 
@@ -302,7 +308,7 @@ const renderBindingHighlight = (
 
   context.save();
   context.translate(appState.scrollX, appState.scrollY);
-  renderHighlight(context, suggestedBinding as any, elementsMap);
+  renderHighlight(context, suggestedBinding as any, elementsMap, appState);
 
   context.restore();
 };
