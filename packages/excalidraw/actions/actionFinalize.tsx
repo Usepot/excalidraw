@@ -82,11 +82,12 @@ export const actionFinalize = register<FormData>({
       );
 
       if (isBindingElement(element)) {
-        const newArrow = !appState.selectedLinearElement?.selectedPointsIndices;
+        const newArrow = !!appState.newElement;
 
-        const selectedPointsIndices = newArrow
-          ? [element.points.length - 1] // New arrow creation
-          : appState.selectedLinearElement.selectedPointsIndices;
+        const selectedPointsIndices =
+          newArrow || !appState.selectedLinearElement.selectedPointsIndices
+            ? [element.points.length - 1] // New arrow creation
+            : appState.selectedLinearElement.selectedPointsIndices;
 
         const draggedPoints: PointsPositionUpdates =
           selectedPointsIndices.reduce((map, index) => {
