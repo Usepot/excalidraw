@@ -240,6 +240,30 @@ export const getStartGlobalEndLocalPointsForSimpleArrowBinding = (
 ): [GlobalPoint, LocalPoint] => {
   let startGlobalPoint = startPoint;
   let endLocalPoint = endPoint;
+
+  if (end.mode) {
+    const newEndLocalPoint = updateBoundPoint(
+      arrow,
+      "endBinding",
+      end.mode
+        ? {
+            ...calculateFixedPointForNonElbowArrowBinding(
+              arrow,
+              end.element,
+              "end",
+              elementsMap,
+              end.focusPoint,
+            ),
+            elementId: end.element.id,
+            mode: end.mode,
+          }
+        : null,
+      end.element,
+      elementsMap,
+    );
+    endLocalPoint = newEndLocalPoint ?? endLocalPoint;
+  }
+
   if (start.mode) {
     const newStartLocalPoint = updateBoundPoint(
       arrow,
@@ -267,29 +291,6 @@ export const getStartGlobalEndLocalPointsForSimpleArrowBinding = (
           elementsMap,
         )
       : startGlobalPoint;
-  }
-
-  if (end.mode) {
-    const newEndLocalPoint = updateBoundPoint(
-      arrow,
-      "endBinding",
-      end.mode
-        ? {
-            ...calculateFixedPointForNonElbowArrowBinding(
-              arrow,
-              end.element,
-              "end",
-              elementsMap,
-              end.focusPoint,
-            ),
-            elementId: end.element.id,
-            mode: end.mode,
-          }
-        : null,
-      end.element,
-      elementsMap,
-    );
-    endLocalPoint = newEndLocalPoint ?? endLocalPoint;
   }
 
   return [
