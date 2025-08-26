@@ -417,9 +417,7 @@ const bindingStrategyForNewSimpleArrowEndpointDragging = (
         end = {
           mode: isInsideBinding ? "inside" : "orbit",
           element: hit,
-          focusPoint: isInsideBinding
-            ? point
-            : snapToCenter(hit, elementsMap, point),
+          focusPoint: point,
         };
       } else {
         end = { mode: null };
@@ -507,7 +505,7 @@ const bindingStrategyForSimpleArrowEndpointDragging = (
     current = {
       element: hit,
       mode: "orbit",
-      focusPoint: snapToCenter(hit, elementsMap, point),
+      focusPoint: point,
     };
   }
 
